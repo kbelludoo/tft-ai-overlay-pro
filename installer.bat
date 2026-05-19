@@ -2,64 +2,58 @@
 color 0A
 title Instalador TFT AI Overlay Pro
 echo ==========================================
-echo   TFT AI OVERLAY PRO - Instalador Blindado
+echo   TFT AI OVERLAY PRO - Instalador Automatico
 echo ==========================================
 echo.
 
-:: 1. Detectar Python
+:: 1. Verificar Python
 python --version >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [ERRO] Python nao encontrado!
-    echo Por favor, instale o Python 3.10+ marcando 'Add to PATH'.
+    echo [!] Python nao encontrado. Por favor, instale o Python 3.10+ marcando 'Add to PATH'.
     pause
+    start https://www.python.org/downloads/
     exit
 )
-echo [+] Python detectado: 
-python --version
 
-:: 2. Instalar Dependências (Ignora erros leves)
-echo [*] Instalando bibliotecas...
-pip install -r requirements.txt --quiet --upgrade
-if %errorlevel% neq 0 (
-    echo [!] Aviso: Algumas bibliotecas podem ter falhado, tentando continuar...
-)
+echo [+] Python detectado!
+echo [*] Instalando bibliotecas basicas...
+pip install -r requirements.txt --quiet
 
-:: 3. Tentar Instalar PyAudio (Opcional - Se falhar, nao para)
+:: 2. Tentar instalar PyAudio (Opcional, ignora falhas)
 echo [*] Tentando instalar suporte a Voz (PyAudio)...
-pip install pipwin --quiet
-pipwin install pyaudio --quiet 2>nul
+pip install pipwin --quiet >nul 2>&1
+pipwin install pyaudio --quiet >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [!] PyAudio nao instalado (Normal em alguns PCs). O modo de voz sera desativado.
+    echo [!] PyAudio nao instalado (Opcional). O modo de voz pode nao funcionar.
 ) else (
     echo [+] PyAudio instalado com sucesso!
 )
 
-:: 4. Baixar Ícone Aleatório (Com proteção de erro)
-echo [*] Gerando icone aleatorio do campeao...
-python -c "import requests, random, os; url=f'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/{random.randint(1,160)}_0.jpg'; r=requests.get(url, timeout=5); open('icon_temp.jpg','wb').write(r.content); print('Icone baixado!')" 2>nul
-if %errorlevel% neq 0 (
-    echo [!] Falha ao baixar icone. Usando padrao...
-    echo. > icon_temp.jpg
-)
-
-:: 5. Rodar Configuração Gráfica
+:: 3. Configurar Chaves
 echo [*] Abrindo configuracao das chaves...
-start /wait python config_gui.py
-
+python config_gui.py
 if %errorlevel% neq 0 (
-    echo [ERRO] Configuracao cancelada ou falhou.
+    echo [ERRO] Falha na configuracao.
     pause
     exit
 )
 
-:: 6. Criar Atalho na Área de Trabalho
-echo [*] Criando atalho na Area de Trabalho...
-set "DESKTOP=%USERPROFILE%\Desktop"
-powershell "$WshShell = New-Object -comObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%DESKTOP%\TFT Overlay Pro.lnk'); $Shortcut.TargetPath = '%cd%\run_game.bat'; $Shortcut.WorkingDirectory = '%cd%'; $Shortcut.IconLocation = '%cd%\icon_temp.jpg'; $Shortcut.Save()"
+:: 4. Criar Atalho com Ícone Aleatório Embutido
+echo.
+echo [+] Criando atalho na Area de Trabalho com icone aleatorio...
+
+:: Script Python para gerar o atalho com ícone embutido
+powershell -Command "Invoke-Expression -Command (Get-Content -Raw '%~dp0create_shortcut.py')"
+
+if exist "%USERPROFILE%\Desktop\TFT Overlay Pro.lnk" (
+    echo [+] Atalho criado com sucesso!
+) else (
+    echo [!] Nao foi possivel criar o atalho automaticamente.
+)
 
 echo.
 echo ==========================================
 echo   INSTALACAO CONCLUIDA!
-echo   Verifique sua Area de Trabalho.
+echo   Va para a Area de Trabalho e clique no icone do Campeao!
 echo ==========================================
 pause
