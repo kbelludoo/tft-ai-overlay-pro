@@ -2,53 +2,61 @@ import asyncio
 import sys
 import threading
 import os
-import time
+import logging
 from dotenv import load_dotenv
 
-# Imports dos módulos locais
-try:
-    from core.config_manager import ConfigManager
-    from core.web_server import WebServer
-    from core.game_loop import GameLoop
-    # Importe outros módulos conforme necessário
-except ImportError as e:
-    print(f"❌ Erro ao importar módulos: {e}")
-    sys.exit(1)
+# Configurar Log Automático em Arquivo
+logging.basicConfig(
+    filename='error_log.txt',
+    level=logging.ERROR,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+# ... (Resto do seu código main.py mantendo os imports seguros)
+# Certifique-se de que os imports estão dentro de try/except se forem opcionais
 
 def main():
-    print("🚀 Iniciando TFT AI Overlay Pro...")
-    load_dotenv()
-    
-    # Verificar .env
-    if not os.path.exists(".env"):
-        print("❌ Arquivo .env não encontrado. Execute o installer.bat novamente.")
-        return
-
-    config = ConfigManager()
-    print("✅ Config Manager OK")
-    
-    # Inicializar Loop do Jogo (Backend)
-    game = GameLoop(config) 
-    print("🎮 Loop do jogo iniciado...")
-    
-    # Inicializar Servidor Web (Frontend/HUD)
-    server = WebServer(game)
-    
-    # Rodar o servidor em uma thread separada para não travar o console
-    t_server = threading.Thread(target=server.run, daemon=True)
-    t_server.start()
-    
-    print("🟢 SISTEMA RODANDO COM SUCESSO!")
-    print("📡 Conectando à API da Riot...")
-    print("💡 Se o navegador não abriu, verifique se há pop-ups bloqueados.")
-    
     try:
+        load_dotenv()
+        print("🚀 Iniciando TFT AI Overlay Pro...")
+        
+        # Imports seguros
+        try:
+            from core.config_manager import ConfigManager
+            from core.web_server import WebServer
+            from core.game_loop import GameLoop
+            from core.voice_manager import VoiceManager
+            from core.health_reporter import HealthReporter
+        except ImportError as e:
+            logging.error(f"Falha crítica na importação: {e}")
+            print(f"❌ Erro ao carregar módulos: {e}")
+            print("Verifique o arquivo error_log.txt")
+            input("Pressione Enter para sair...")
+            return
+
+        config = ConfigManager()
+        reporter = HealthReporter(config)
+        voice = VoiceManager(config)
+        game = GameLoop(config, voice) # Simplificado para teste
+        server = WebServer(game)
+        
+        # Threads
+        t_game = threading.Thread(target=game.run, daemon=True)
+        t_server = threading.Thread(target=server.run, daemon=True)
+        
+        t_game.start()
+        t_server.start()
+        
+        print("✅ SISTEMA RODANDO! Verifique a área de trabalho ou o navegador.")
+        
         while True:
             time.sleep(1)
-            # Aqui entraria a lógica principal do jogo
-    except KeyboardInterrupt:
-        print("\n🛑 Encerrando sistema...")
-        sys.exit(0)
+            
+    except Exception as e:
+        logging.error(f"Erro fatal na execução: {e}", exc_info=True)
+        print(f"❌ Ocorreu um erro inesperado: {e}")
+        print("Detalhes salvos em error_log.txt")
+        input("Pressione Enter para sair...")
 
 if __name__ == "__main__":
     main()
