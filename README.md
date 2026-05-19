@@ -110,7 +110,7 @@ Gostou do projeto? Quer ver alguma funcionalidade nova?
 *   Abra uma **Issue** para reportar bugs ou sugerir melhorias.
 *   Compartilhe com seus amigos do Squad!
 
-**Desenvolvido por [kbelludoo](https://github.com/kbelludoo) com ❤️ para a comunidade de TFT.**
+**Desenvolvido por [KbElLuDoO](https://github.com/kbelludoo) com ❤️ para a comunidade de TFT.**
 
 ---
 
