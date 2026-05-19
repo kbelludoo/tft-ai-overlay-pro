@@ -1,31 +1,41 @@
-import speech_recognition as sr
 import threading
 import time
+
+# Tenta importar, mas não quebra o programa se falhar
+try:
+    import speech_recognition as sr
+    VOICE_AVAILABLE = True
+except ImportError:
+    VOICE_AVAILABLE = False
+    print("⚠️ Módulo de voz não disponível (instale speech_recognition)")
 
 class VoiceManager:
     def __init__(self, config):
         self.config = config
-        self.recognizer = sr.Recognizer()
         self.active = False
-        self.listen_thread = None
+        if not VOICE_AVAILABLE:
+            print("🎤 Voz desativada: biblioteca não encontrada.")
+            return
+            
+        self.recognizer = sr.Recognizer()
         
     def start_listening(self):
+        if not VOICE_AVAILABLE: return
         self.active = True
-        self.listen_thread = threading.Thread(target=self._loop, daemon=True)
-        self.listen_thread.start()
+        threading.Thread(target=self._loop, daemon=True).start()
 
     def _loop(self):
-        with sr.Microphone() as source:
-            self.recognizer.adjust_for_ambient_noise(source)
-            while self.active:
-                try:
-                    audio = self.recognizer.listen(source, timeout=5, phrase_time_limit=10)
-                    text = self.recognizer.recognize_google(audio, language='pt-BR').lower()
-                    if "oi overlay" in text:
-                        self.process_command(text)
-                except:
-                    pass
-
-    def process_command(self, text):
-        print(f"🎤 Comando Recebido: {text}")
-        # Lógica de processamento de comando aqui
+        try:
+            with sr.Microphone() as source:
+                self.recognizer.adjust_for_ambient_noise(source, duration=0.5)
+                while self.active:
+                    try:
+                        audio = self.recognizer.listen(source, timeout=2, phrase_time_limit=5)
+                        text = self.recognizer.recognize_google(audio, language='pt-BR').lower()
+                        if "oi overlay" in text:
+                            print(f"🎤 Ouvi: {text}")
+                            # Aqui entraria a lógica de comando
+                    except Exception:
+                        pass
+        except Exception:
+            self.active = False
