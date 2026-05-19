@@ -1,54 +1,54 @@
-import os
+import asyncio
 import sys
-import time
 import threading
+import os
+import time
 from dotenv import load_dotenv
 
-# Carrega variáveis de ambiente
-load_dotenv()
-
-print("🚀 Iniciando TFT AI Overlay Pro...")
-
-# Verificação básica de chaves
-if not os.getenv("RIOT_API_KEY") or not os.getenv("OPENROUTER_API_KEY"):
-    print("❌ ERRO: Chaves da API não encontradas no arquivo .env!")
-    print("Por favor, execute o instalador novamente ou edite o arquivo .env.")
-    input("Pressione Enter para sair...")
+# Imports dos módulos locais
+try:
+    from core.config_manager import ConfigManager
+    from core.web_server import WebServer
+    from core.game_loop import GameLoop
+    # Importe outros módulos conforme necessário
+except ImportError as e:
+    print(f"❌ Erro ao importar módulos: {e}")
     sys.exit(1)
 
-print("✅ Chaves detectadas.")
+def main():
+    print("🚀 Iniciando TFT AI Overlay Pro...")
+    load_dotenv()
+    
+    # Verificar .env
+    if not os.path.exists(".env"):
+        print("❌ Arquivo .env não encontrado. Execute o installer.bat novamente.")
+        return
 
-# Tenta importar os módulos principais com tratamento de erro
-try:
-    # Nota: Se algum módulo falhar, o programa avisa mas tenta continuar se possível
-    from core.config_manager import ConfigManager
+    config = ConfigManager()
     print("✅ Config Manager OK")
     
-    # Simulação do Loop Principal (Substitua pelas suas classes reais quando corrigir os imports)
-    # Se der erro aqui, é porque os arquivos na pasta 'core' não batem com o import
+    # Inicializar Loop do Jogo (Backend)
+    game = GameLoop(config) 
+    print("🎮 Loop do jogo iniciado...")
     
-    # --- INÍCIO DO LOOP SIMPLIFICADO PARA TESTE ---
-    def game_loop():
-        print("🎮 Loop do jogo iniciado...")
-        print("📡 Conectando à API da Riot...")
-        # Aqui entraria a lógica real
-        while True:
-            time.sleep(1)
-            # Simulação de status
-            # print(".", end="", flush=True) 
-
-    # Inicia em thread separada para não travar se tiver GUI futura
-    t = threading.Thread(target=game_loop, daemon=True)
-    t.start()
+    # Inicializar Servidor Web (Frontend/HUD)
+    server = WebServer(game)
+    
+    # Rodar o servidor em uma thread separada para não travar o console
+    t_server = threading.Thread(target=server.run, daemon=True)
+    t_server.start()
     
     print("🟢 SISTEMA RODANDO COM SUCESSO!")
-    print("Pressione Ctrl+C para parar.")
+    print("📡 Conectando à API da Riot...")
+    print("💡 Se o navegador não abriu, verifique se há pop-ups bloqueados.")
     
-    while True:
-        time.sleep(1)
-        
-except Exception as e:
-    print(f"\n❌ ERRO CRÍTICO AO INICIAR: {e}")
-    print("\nDica: Verifique se todos os arquivos na pasta 'core' existem e estão corretos.")
-    input("Pressione Enter para sair...")
-    sys.exit(1)
+    try:
+        while True:
+            time.sleep(1)
+            # Aqui entraria a lógica principal do jogo
+    except KeyboardInterrupt:
+        print("\n🛑 Encerrando sistema...")
+        sys.exit(0)
+
+if __name__ == "__main__":
+    main()
