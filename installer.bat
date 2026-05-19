@@ -6,37 +6,29 @@ echo   TFT AI OVERLAY PRO - Instalador Automatico
 echo ==========================================
 echo.
 
-:: 1. Verificar Python
+:: Verificar Python
 python --version >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [!] Python nao encontrado!
-    echo [*] Baixando instalador do Python...
-    curl -o python_installer.exe https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe
-    echo [*] INSTALE O PYTHON MARCANDO A CAIXA "Add Python to PATH" e depois rode este arquivo novamente.
+    echo [!] Python nao encontrado. Por favor, instale o Python 3.11+ marcando 'Add to PATH'.
     pause
-    start python_installer.exe
     exit
 )
 
 echo [+] Python detectado!
 echo [*] Instalando bibliotecas basicas...
-pip install --upgrade pip
 pip install -r requirements.txt
 
-:: 2. Tentar instalar PyAudio (Pode falhar, mas nao para o script)
+:: Tentar instalar PyAudio separadamente, mas nao falhar se der erro
 echo [*] Tentando instalar suporte a Voz (PyAudio)...
 pip install pipwin
-pipwin install pyaudio
-if %errorlevel% neq 0 (
-    echo [!] Nao foi possivel instalar PyAudio automaticamente.
-    echo [!] O modo de voz pode nao funcionar, mas o resto do app funcionara.
-)
+pipwin install pyaudio || echo [!] PyAudio nao instalado (Opcional). O modo de voz pode nao funcionar.
 
 echo.
 echo [*] Abrindo configuracao das chaves...
 python config_gui.py
+
 if %errorlevel% neq 0 (
-    echo [ERRO] Falha na configuracao. Verifique se preencheu as chaves.
+    echo [ERRO] Falha na configuracao. Tente executar 'python config_gui.py' manualmente.
     pause
     exit
 )
@@ -47,7 +39,6 @@ powershell "$WshShell = New-Object -comObject WScript.Shell; $Shortcut = $WshShe
 
 echo.
 echo ==========================================
-echo   INSTALACAO CONCLUIDA!
-echo   Va para a Area de Trabalho e clique em 'TFT Overlay Pro'
+echo   INSTALACAO CONCLUIDA COM SUCESSO!
 echo ==========================================
 pause
