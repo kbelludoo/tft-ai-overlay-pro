@@ -1,30 +1,33 @@
-import tkinter as tk
-from tkinter import messagebox
-import os
-import sys
+# ... (código anterior do config_gui.py)
 
+# Adicione este campo na interface, logo abaixo da chave da Riot
+tk.Label(root, text="GitHub Token (Opcional - Para relatórios de erro):", bg="#f0f0f0").pack()
+entry_github = tk.Entry(root, width=50)
+entry_github.pack(pady=5)
+tk.Label(root, text="Deixe vazio se não quiser enviar logs.", fg="gray", font=("Arial", 8)).pack()
+
+# ... (na função save_config)
 def save_config():
     openrouter = entry_openrouter.get()
     riot = entry_riot.get()
-    github = entry_github.get()
+    github = entry_github.get() # Pega o token se o usuário digitou
+    consent = var_consent.get()
     
     if not openrouter or not riot:
-        messagebox.showerror("Erro", "As chaves da OpenRouter e Riot são obrigatórias!")
+        messagebox.showerror("Erro", "Chaves da OpenRouter e Riot são obrigatórias!")
         return
 
-    # Criar arquivo .env
     with open(".env", "w") as f:
         f.write(f"OPENROUTER_API_KEY=\"{openrouter}\"\n")
         f.write(f"RIOT_API_KEY=\"{riot}\"\n")
-        f.write(f"GITHUB_TOKEN=\"{github}\"\n")
+        if github:
+            f.write(f"GITHUB_TOKEN=\"{github}\"\n") # Salva apenas se fornecido
+        else:
+            f.write("GITHUB_TOKEN=\"\"\n")
+        
         f.write(f"GITHUB_REPO_OWNER=\"kbelludoo\"\n")
         f.write(f"GITHUB_REPO_NAME=\"tft-ai-overlay-pro\"\n")
-        f.write(f"CONSENT_ERROR_REPORT=true\n")
-        f.write(f"USER_EMAIL_REPORT=\"kbelludoo@gmail.com\"\n")
-    
-    messagebox.showinfo("Sucesso", "Configurações salvas! O instalador continuará agora.")
-    root.destroy()
-    sys.exit(0)
+        f.write(f"CONSENT_ERROR_REPORT={consent}\n")
 
 root = tk.Tk()
 root.title("Configuração Inicial - TFT AI Overlay")
