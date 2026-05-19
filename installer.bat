@@ -1,63 +1,77 @@
 @echo off
 color 0A
-title Instalador TFT AI Overlay Pro
-echo ==========================================
-echo   TFT AI OVERLAY PRO - Instalador Automatico
-echo ==========================================
-echo.
+title Instalador TFT AI Overlay Pro - KbElLuDoO
+set LOG_FILE=install_log.txt
+
+:: Limpa log anterior e inicia novo
+echo ========================================== > %LOG_FILE%
+echo   LOG DE INSTALACAO - %DATE% %TIME% >> %LOG_FILE%
+echo ========================================== >> %LOG_FILE%
+
+echo Iniciando instalacao... Aguarde.
+echo [LOG] Iniciando processo de instalacao... >> %LOG_FILE%
 
 :: 1. Verificar Python
-python --version >nul 2>&1
+echo [*] Verificando Python...
+python --version >> %LOG_FILE% 2>&1
 if %errorlevel% neq 0 (
-    echo [!] Python nao encontrado. Por favor, instale o Python 3.10+ marcando 'Add to PATH'.
+    echo [ERRO] Python nao encontrado! >> %LOG_FILE%
+    echo [!] Python nao detectado. Por favor, instale o Python 3.10+ marcando 'Add to PATH'.
+    echo [!] Veja o log em install_log.txt para detalhes.
     pause
-    start https://www.python.org/downloads/
-    exit
+    exit /b 1
 )
+echo [+] Python detectado. >> %LOG_FILE%
 
-echo [+] Python detectado!
-echo [*] Instalando bibliotecas basicas...
-pip install -r requirements.txt --quiet
-
-:: 2. Tentar instalar PyAudio (Opcional, ignora falhas)
-echo [*] Configurando suporte a Voz (PyAudio)...
-:: Tenta instalar usando o modulo Python diretamente, sem depender do comando pipwin
-python -c "import pipwin; pipwin.install('pyaudio')" 2>nul
+:: 2. Instalar Dependências Principais
+echo [*] Instalando bibliotecas principais...
+echo [LOG] Iniciando pip install... >> %LOG_FILE%
+pip install -r requirements.txt >> %LOG_FILE% 2>&1
 if %errorlevel% neq 0 (
-    echo [!] Nao foi possivel instalar PyAudio automaticamente (Comum no Windows).
-    echo [!] O modo de voz ficara desativado, mas o resto do app funcionara perfeitamente.
-    echo [!] Dica: Se quiser voz, instale manualmente: pip install pipwin ^&^& pipwin install pyaudio
-) else (
-    echo [+] Suporte a voz instalado com sucesso!
+    echo [ERRO] Falha ao instalar bibliotecas principais. >> %LOG_FILE%
+    echo [!] Erro ao instalar dependencias. Verifique o arquivo install_log.txt.
+    pause
+    exit /b 1
 )
-echo.
+echo [+] Bibliotecas principais instaladas. >> %LOG_FILE%
+
+:: 3. Tentar Instalar PyAudio (Com tratamento de erro robusto)
+echo [*] Tentando instalar suporte a Voz (PyAudio)...
+echo [LOG] Tentando instalar PyAudio... >> %LOG_FILE%
+
+:: Tenta usar o módulo python diretamente
+python -c "import pipwin; pipwin.install('pyaudio')" >> %LOG_FILE% 2>&1
+if %errorlevel% neq 0 (
+    echo [AVISO] Falha na instalacao automatica do PyAudio. >> %LOG_FILE%
+    echo [!] Nao foi possivel instalar PyAudio automaticamente.
+    echo [!] O modo de voz ficara desativado, mas o jogo funcionara.
+    echo [!] Para tentar corrigir manualmente depois, rode: python -m pipwin install pyaudio
+) else (
+    echo [+] PyAudio instalado com sucesso! >> %LOG_FILE%
 )
 
-:: 3. Configurar Chaves
+:: 4. Rodar Configuração GUI
 echo [*] Abrindo configuracao das chaves...
-python config_gui.py
+echo [LOG] Iniciando config_gui.py... >> %LOG_FILE%
+start /wait python config_gui.py >> %LOG_FILE% 2>&1
+
 if %errorlevel% neq 0 (
-    echo [ERRO] Falha na configuracao.
+    echo [ERRO] Falha ao abrir configuracao ou usuario cancelou. >> %LOG_FILE%
+    echo [!] Erro na configuracao inicial. Verifique install_log.txt.
     pause
-    exit
+    exit /b 1
 )
 
-:: 4. Criar Atalho com Ícone Aleatório Embutido
-echo.
-echo [+] Criando atalho na Area de Trabalho com icone aleatorio...
-
-:: Script Python para gerar o atalho com ícone embutido
-powershell -Command "Invoke-Expression -Command (Get-Content -Raw '%~dp0create_shortcut.py')"
-
-if exist "%USERPROFILE%\Desktop\TFT Overlay Pro.lnk" (
-    echo [+] Atalho criado com sucesso!
-) else (
-    echo [!] Nao foi possivel criar o atalho automaticamente.
-)
+:: 5. Criar Atalho
+echo [*] Criando atalho na Area de Trabalho...
+echo [LOG] Criando atalho... >> %LOG_FILE%
+powershell "$WshShell = New-Object -comObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%USERPROFILE%\Desktop\TFT Overlay Pro.lnk'); $Shortcut.TargetPath = '%cd%\run_game.bat'; $Shortcut.WorkingDirectory = '%cd%'; $Shortcut.Save()" >> %LOG_FILE% 2>&1
 
 echo.
 echo ==========================================
 echo   INSTALACAO CONCLUIDA!
-echo   Va para a Area de Trabalho e clique no icone do Campeao!
+echo   Um atalho foi criado na sua Area de Trabalho.
+echo   Se houve erros, veja o arquivo: install_log.txt
 echo ==========================================
+echo [LOG] Instalacao concluida com sucesso. >> %LOG_FILE%
 pause
