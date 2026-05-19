@@ -5,3 +5,5 @@ numpy
 pillow
 speechrecognition
 pyttsx3
+SoundDevice
+SoundFile
