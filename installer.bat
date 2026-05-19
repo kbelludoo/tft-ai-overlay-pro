@@ -20,13 +20,17 @@ echo [*] Instalando bibliotecas basicas...
 pip install -r requirements.txt --quiet
 
 :: 2. Tentar instalar PyAudio (Opcional, ignora falhas)
-echo [*] Tentando instalar suporte a Voz (PyAudio)...
-pip install pipwin --quiet >nul 2>&1
-pipwin install pyaudio --quiet >nul 2>&1
+echo [*] Configurando suporte a Voz (PyAudio)...
+:: Tenta instalar usando o modulo Python diretamente, sem depender do comando pipwin
+python -c "import pipwin; pipwin.install('pyaudio')" 2>nul
 if %errorlevel% neq 0 (
-    echo [!] PyAudio nao instalado (Opcional). O modo de voz pode nao funcionar.
+    echo [!] Nao foi possivel instalar PyAudio automaticamente (Comum no Windows).
+    echo [!] O modo de voz ficara desativado, mas o resto do app funcionara perfeitamente.
+    echo [!] Dica: Se quiser voz, instale manualmente: pip install pipwin ^&^& pipwin install pyaudio
 ) else (
-    echo [+] PyAudio instalado com sucesso!
+    echo [+] Suporte a voz instalado com sucesso!
+)
+echo.
 )
 
 :: 3. Configurar Chaves
