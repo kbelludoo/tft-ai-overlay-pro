@@ -1,8 +1,7 @@
-speechrecognition
 requests
 websockets
 python-dotenv
-pyttsx3
 numpy
 pillow
-riot-watcher
+speechrecognition
+pyttsx3
