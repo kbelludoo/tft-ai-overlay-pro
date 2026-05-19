@@ -29,16 +29,35 @@ if %errorlevel% neq 0 (
 )
 echo [+] Bibliotecas principais instaladas. >> %LOG_FILE%
 
-:: 3. Tentar PyAudio (Método Alternativo Seguro)
-echo [*] Tentando configurar audio (Opcional)...
-:: Tenta instalar direto via pip primeiro (mais seguro no Python 3.14)
-pip install pyaudio >> %LOG_FILE% 2>&1
-if %errorlevel% neq 0 (
-    echo [AVISO] PyAudio nao instalado automaticamente. Modo de voz desativado. >> %LOG_FILE%
-    echo [!] Audio nao configurado (Comum no Windows). O jogo funcionara sem voz.
-) else (
-    echo [+] Audio configurado com sucesso! >> %LOG_FILE%
+echo [*] Configurando suporte a Voz (Audio)...
+echo [LOG] Tentando instalar drivers de audio... >> %LOG_FILE%
+
+:: Tentativa 1: Instalar PyAudio binário direto (funciona na maioria dos Windows)
+echo [LOG] Tentativa 1: PyAudio wheel... >> %LOG_FILE%
+pip install PyAudio --prefer-binary >> %LOG_FILE% 2>&1
+if %errorlevel% equ 0 (
+    echo [+] PyAudio instalado com sucesso!
+    echo [LOG] PyAudio instalado. >> %LOG_FILE%
+    goto AUDIO_DONE
 )
+
+:: Tentativa 2: Instalar SoundDevice (Alternativa moderna e leve)
+echo [AVISO] PyAudio falhou. Tentando alternativa (SoundDevice)... >> %LOG_FILE%
+pip install sounddevice soundfile >> %LOG_FILE% 2>&1
+if %errorlevel% equ 0 (
+    echo [+] Alternativa SoundDevice instalada! O modo de voz funcionará.
+    echo [LOG] SoundDevice instalado como fallback. >> %LOG_FILE%
+    goto AUDIO_DONE
+)
+
+:: Falha Total
+echo [ERRO] Nao foi possivel instalar nenhum driver de audio. >> %LOG_FILE%
+echo [!] Aviso: O modo de voz ficara desativado nesta instalacao.
+echo [!] Para corrigir manualmente depois, abra o CMD e digite: pip install PyAudio --prefer-binary
+goto AUDIO_DONE
+
+:AUDIO_DONE
+echo.
 
 :: 4. Rodar Configuração GUI
 echo [*] Abrindo configuracao das chaves...
